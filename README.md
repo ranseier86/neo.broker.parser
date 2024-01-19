@@ -4,6 +4,6 @@ this tool saved you some work? consider support via https://www.paypal.com/donat
 
 run in command line with vm arguments
 
-'''
+```
 start javaw.exe -Dorg.eclipse.swt.browser.DefaultType=edge -jar scalable.capital.parser.jar
-'''
+```
