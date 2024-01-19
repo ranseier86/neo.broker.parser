@@ -28,6 +28,7 @@ public class Window {
 	private Browser browser;
 	private Button btnTransactions;
 	private Button btnScroll;
+	private Text text;
 
 	/**
 	 * Launch the application.
@@ -152,6 +153,15 @@ public class Window {
 		}
 		System.out.println("done");
 	}
+	
+	private void click() {
+		//browser.execute("var asdf = document.getElementsByClassName('MuiGrid-root'); asdf.click();");
+		//browser.execute("var asdf = document.getElementsByAttributeValue('role', 'listitem'); asdf.click();");
+		//browser.execute("asdf = document.getElementsByClassName('MuiGrid-root'); asdf[38].style.backgroundColor = 'red'; asdf[38].click();");
+		browser.execute(text.getText());
+		
+		
+	}
 
 	/**
 	 * Create contents of the window.
@@ -172,7 +182,7 @@ public class Window {
 		btnNewButton.setText("export");
 		
 		browser = new Browser(shell, SWT.NONE);
-		browser.setBounds(10, 10, 439, 546);
+		browser.setBounds(10, 10, 439, 505);
 		System.out.println(browser.getBrowserType());
 		
 		Button btnNewButton_1 = new Button(shell, SWT.NONE);
@@ -204,5 +214,18 @@ public class Window {
 		});
 		btnScroll.setBounds(172, 562, 75, 25);
 		btnScroll.setText("scroll");
+		
+		Button btnClieck = new Button(shell, SWT.NONE);
+		btnClieck.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				click();
+			}
+		});
+		btnClieck.setBounds(253, 562, 75, 25);
+		btnClieck.setText("click");
+		
+		text = new Text(shell, SWT.BORDER);
+		text.setBounds(10, 521, 439, 21);
 	}
 }
