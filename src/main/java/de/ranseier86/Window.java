@@ -145,8 +145,9 @@ public class Window {
 			while (last != browser.getText().length()) {
 				last = browser.getText().length();
 				browser.execute("window.scrollTo(0, document.body.scrollHeight);");
-				Thread.sleep(500);
-			}			
+				Thread.sleep(1000);
+			}
+			browser.execute("window.scrollTo(0, 0);");
 		}
 		catch (Exception e) {
 			System.out.println(e.getMessage());
@@ -154,13 +155,56 @@ public class Window {
 		System.out.println("done");
 	}
 	
+	private void entries() {
+		try {
+			Document doc = Jsoup.parse(browser.getText());
+			Element body = doc.body();
+			Elements root = body.getElementsByClass("MuiGrid-root");
+			System.out.println(root.size());
+			ArrayList<Integer> allEntries = new ArrayList<Integer>();
+			for (int i = 0; i <= root.size()-1; i++) {
+				for ( Attribute att : root.get(i).attributes().asList() ) {
+					if (att.getKey().equals("aria-labelledby")) {
+						allEntries.add(i);
+					}
+				}
+			}
+			System.out.println("found " + allEntries.size() + " entries");
+			boolean first = true;
+			for (int entry : allEntries) {
+				browser.execute("child = document.getElementsByClassName('MuiGrid-root');");
+				if (first) {
+					first = false;
+					browser.execute("firstPos = child[" + entry + "].getBoundingClientRect();");
+					Thread.sleep(100);
+				}
+				browser.execute("nextPos = child[" + entry + "].getBoundingClientRect();");
+				browser.execute("scrollPos = nextPos.top - firstPos.top;");
+				browser.execute("window.scrollTo(0, scrollPos);");
+				Thread.sleep(100);
+				browser.execute("child[" + entry + "].style.backgroundColor = 'red';");
+				Thread.sleep(1000);
+				browser.execute("child[" + entry + "].click();");
+				Thread.sleep(1000);
+				browser.execute("end = document.getElementsByClassName('MuiButton-endIcon');");
+				browser.execute("end[1].click();");
+				Thread.sleep(1000);
+				browser.execute("child[" + entry + "].style.backgroundColor = 'blue';");
+				Thread.sleep(1000);
+				browser.execute("window.scrollTo(0, 0);");
+			}
+				
+		}
+		catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+	}
+	
 	private void click() {
 		//browser.execute("var asdf = document.getElementsByClassName('MuiGrid-root'); asdf.click();");
 		//browser.execute("var asdf = document.getElementsByAttributeValue('role', 'listitem'); asdf.click();");
 		//browser.execute("asdf = document.getElementsByClassName('MuiGrid-root'); asdf[38].style.backgroundColor = 'red'; asdf[38].click();");
 		browser.execute(text.getText());
-		
-		
 	}
 
 	/**
@@ -168,7 +212,7 @@ public class Window {
 	 */
 	protected void createContents() {
 		shell = new Shell();
-		shell.setSize(475, 636);
+		shell.setSize(669, 703);
 		shell.setText("SWT Application");
 		
 		Button btnNewButton = new Button(shell, SWT.NONE);
@@ -178,11 +222,11 @@ public class Window {
 				logic();
 			}
 		});
-		btnNewButton.setBounds(374, 562, 75, 25);
+		btnNewButton.setBounds(374, 629, 75, 25);
 		btnNewButton.setText("export");
 		
 		browser = new Browser(shell, SWT.NONE);
-		browser.setBounds(10, 10, 439, 505);
+		browser.setBounds(10, 10, 633, 586);
 		System.out.println(browser.getBrowserType());
 		
 		Button btnNewButton_1 = new Button(shell, SWT.NONE);
@@ -192,7 +236,7 @@ public class Window {
 				browser.setUrl("https://secure.scalable.capital/u/login");
 			}
 		});
-		btnNewButton_1.setBounds(10, 562, 75, 25);
+		btnNewButton_1.setBounds(10, 629, 39, 25);
 		btnNewButton_1.setText("login");
 		
 		btnTransactions = new Button(shell, SWT.NONE);
@@ -202,7 +246,7 @@ public class Window {
 				browser.setUrl("https://de.scalable.capital/broker/transactions");
 			}
 		});
-		btnTransactions.setBounds(91, 562, 75, 25);
+		btnTransactions.setBounds(55, 629, 75, 25);
 		btnTransactions.setText("transactions");
 		
 		btnScroll = new Button(shell, SWT.NONE);
@@ -212,7 +256,7 @@ public class Window {
 				scroll();
 			}
 		});
-		btnScroll.setBounds(172, 562, 75, 25);
+		btnScroll.setBounds(136, 629, 49, 25);
 		btnScroll.setText("scroll");
 		
 		Button btnClieck = new Button(shell, SWT.NONE);
@@ -222,10 +266,20 @@ public class Window {
 				click();
 			}
 		});
-		btnClieck.setBounds(253, 562, 75, 25);
+		btnClieck.setBounds(251, 629, 39, 25);
 		btnClieck.setText("click");
 		
 		text = new Text(shell, SWT.BORDER);
-		text.setBounds(10, 521, 439, 21);
+		text.setBounds(10, 602, 633, 21);
+		
+		Button btnEntries = new Button(shell, SWT.NONE);
+		btnEntries.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				entries();
+			}
+		});
+		btnEntries.setBounds(191, 629, 54, 25);
+		btnEntries.setText("entries");
 	}
 }
