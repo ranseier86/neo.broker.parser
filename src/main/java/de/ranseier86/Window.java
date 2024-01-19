@@ -4,13 +4,13 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 
-import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 
+import javax.swing.JOptionPane;
+
 import org.eclipse.swt.SWT;
-import org.eclipse.wb.swt.SWTResourceManager;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Attribute;
 import org.jsoup.nodes.Document;
@@ -21,15 +21,22 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.browser.Browser;
+import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Monitor;
 
 public class Window {
 
-	protected Shell shell;
+	protected Shell shlScalablecapitalparserV;
 	private Browser browser;
 	private Button btnTransactions;
 	private Button btnScroll;
+	private Button btnJavaScript;
+	private Button btnLogin;
+	private Button btnExport;
 	private Text text;
-
+	private Text textFile;
+	private Display display;
+	
 	/**
 	 * Launch the application.
 	 * @param args
@@ -42,6 +49,13 @@ public class Window {
 			e.printStackTrace();
 		}
 	}
+	
+	private void centerWindow() {
+		Monitor mon = Display.getDefault().getMonitors()[0];
+		int centerWidth = (mon.getBounds().width / 2) - (shlScalablecapitalparserV.getSize().x / 2);
+		int centerHeight = (mon.getBounds().height / 2) - (shlScalablecapitalparserV.getSize().y / 2);
+		shlScalablecapitalparserV.setLocation(centerWidth, centerHeight);
+	}	
 
 	/**
 	 * Open the window.
@@ -49,23 +63,89 @@ public class Window {
 	public void open() {
 		Display display = Display.getDefault();
 		createContents();
-		shell.open();
-		shell.layout();
-		while (!shell.isDisposed()) {
+		shlScalablecapitalparserV.open();
+		shlScalablecapitalparserV.layout();
+		centerWindow();
+		browser.setUrl("https://scalable.capital/broker/transactions");
+		while (!shlScalablecapitalparserV.isDisposed()) {
 			if (!display.readAndDispatch()) {
 				display.sleep();
 			}
 		}
 	}
 	
-	public void writeToFile(ArrayList<String> transactions) {
+	private boolean testFile() {
 	    try {
-	        FileWriter myWriter = new FileWriter("C:\\Users\\Public\\scalable.csv");
-	        
-	        for (String transaction : transactions) {
-	        	myWriter.write(transaction + "\n");
+	        FileWriter myWriter = new FileWriter(textFile.getText());
+        	myWriter.write(
+        			"Pageindex;" +
+        			"Transaction Reference;" +
+        			"ISIN;" +
+        			"Security;" +
+        			"List Security;" +
+        			"Action;" +
+        			"Trading Venue;" +        			
+        			"List Date;" +
+        			"List Time;" +        			
+        			"Total Amount;" +
+        			"Execution Price;" +
+        			"Limit Price;" +        			
+        			"Execution Quantity;" +
+        			"Market Valuation;" +
+        			"Order Fee;" +
+        			"\n"
+        			);
+	        myWriter.close();
+	        System.out.println("Successfully wrote to the file.");
+	        return true;
+	      } catch (IOException e) {
+	        System.out.println("An error occurred.");
+	        e.printStackTrace();
+	        return false;
+	      }
+	}
+	
+	public void writeToFile(ArrayList<Transaction> transactions) {
+	    try {
+	        FileWriter myWriter = new FileWriter(textFile.getText());
+        	myWriter.write(
+        			"Pageindex;" +
+        			"Transaction Reference;" +
+        			"ISIN;" +
+        			"Security;" +
+        			"List Security;" +
+        			"Action;" +
+        			"Trading Venue;" +        			
+        			"List Date;" +
+        			"List Time;" +        			
+        			"Total Amount;" +
+        			"Execution Price;" +
+        			"Limit Price;" +        			
+        			"Execution Quantity;" +
+        			"Market Valuation;" +
+        			"Order Fee;" +
+        			"\n"
+        			);	        
+	        for (Transaction transaction : transactions) {
+	        	myWriter.write(
+	        			transaction.getPageindex() + ";" +
+	        			transaction.getReferenz() + ";" +
+	        			transaction.getIsin() + ";" +
+	        			transaction.getWertpapiername() + ";" +
+	        			transaction.getListeWertpapiername() + ";" +
+	        			transaction.getAktionsart() + ";" +
+	        			transaction.getHandelsplatz() + ";" +	        			
+	        			transaction.getListeDatum() + ";" +
+	        			transaction.getListeUhrzeit() + ";" +	        			
+	        			transaction.getGesamtbetrag() + ";" +
+	        			transaction.getAusfuehrungspreis() + ";" +
+	        			transaction.getLimitpreis() + ";" +	        			
+	        			transaction.getAusfuehrungsstueckzahl() + ";" +
+	        			transaction.getKurswert() + ";" +
+	        			transaction.getOrdergebuehr() + ";" +
+	        			"\n"
+	        			);
 	        }
-	        
 	        myWriter.close();
 	        System.out.println("Successfully wrote to the file.");
 	      } catch (IOException e) {
@@ -73,70 +153,6 @@ public class Window {
 	        e.printStackTrace();
 	      }			
 	}	
-	
-	private void logic() {
-		ArrayList<String> transactions = new ArrayList<String>();
-		String transaction;
-		boolean  firstLine = true;
-		try {
-			//File input = new File("C:\\Users\\Public\\scalable.htm");
-			//Document doc = Jsoup.parse(input, "UTF-8", "http://example.com/");
-			System.out.println(browser.getText());
-			Document doc = Jsoup.parse(browser.getText());
-			Element body = doc.body();
-			//ueberschrift tage class = "jss392"
-			//jss407
-			
-			Elements root = body.getElementsByClass("MuiGrid-root");
-			for (Element single : root ) {
-				transaction = "";
-				for ( Attribute att : single.attributes().asList() ) {
-					if (att.getKey().equals("aria-labelledby")) {
-						transaction = transaction + att.getValue().substring(0, 19).split("T")[0] + ";";
-						transaction = transaction + att.getValue().substring(0, 19).split("T")[1] + ";";
-						
-						Elements link = single.getElementsByAttributeValue("role", "link");
-						for ( Element element : link) {
-							transaction = transaction + element.text().replace(" Stk.", "").replace(" €", "") + ";";
-						}	
-						
-						Elements listitem = single.getElementsByAttributeValue("role", "listitem");
-						for ( Element element : listitem) {
-							transaction = transaction + element.text().replace(" Stk.", "").replace(" €", "") + ";";
-						}
-						transactions.add(transaction);
-						System.out.println(transaction);
-					}
-
-				}
-				
-				/*
-				for (int i = 401; i <= 405; i++) {
-					if (i != 403) {
-						Elements div = single.getElementsByClass("jss" + i);
-						for ( Element element : div) {
-							//transaction = transaction + i + ":" + element.text();
-							transaction = transaction + element.text().replace(" Stk.", "").replace(" €", "");
-						}
-						transaction = transaction  + ";";
-					}
-				}			
-				*/
-
-			}
-			
-			writeToFile(transactions);
-			
-			//System.out.println(jss394.size());
-			//System.out.println(jss397.size());
-			//System.out.println(jss398.size());
-			
-		}
-		catch (Exception e) {
-			System.out.println(e.getMessage());
-		}
-
-	}
 	
 	private void scroll() {
 		//browser.execute("last = 0; while (true) { alert(document.body.scrollHeight); last = document.body.scrollHeight; window.scrollTo(0, document.body.scrollHeight); alert(document.body.scrollHeight); if ( document.body.scrollHeight == last ) { alert('end'); break; } } ");
@@ -156,54 +172,168 @@ public class Window {
 	}
 	
 	private void entries() {
-		try {
-			Document doc = Jsoup.parse(browser.getText());
-			Element body = doc.body();
-			Elements root = body.getElementsByClass("MuiGrid-root");
-			System.out.println(root.size());
-			ArrayList<Integer> allEntries = new ArrayList<Integer>();
-			for (int i = 0; i <= root.size()-1; i++) {
-				for ( Attribute att : root.get(i).attributes().asList() ) {
-					if (att.getKey().equals("aria-labelledby")) {
-						allEntries.add(i);
+		if (!testFile()) {
+			JOptionPane.showMessageDialog(null, "File not valid");
+		}
+		else {
+			try {
+				textFile.setEnabled(false);
+				text.setEnabled(false);
+				btnLogin.setEnabled(false);
+				btnScroll.setEnabled(false);
+				btnTransactions.setEnabled(false);
+				btnExport.setEnabled(false);
+				btnJavaScript.setEnabled(false);
+				Thread.sleep(100);
+				
+				ArrayList<Transaction> arrayTransactions = new ArrayList<Transaction>();
+				
+				//read the document
+				Document doc = Jsoup.parse(browser.getText());
+				Element body = doc.body();
+				Elements root = body.getElementsByClass("MuiGrid-root");
+				////////////////
+				
+				///// values from the overview list
+				// also init of all transaction elements
+				for (int i = 0; i <= root.size()-1; i++) {
+					for ( Attribute att : root.get(i).attributes().asList() ) {
+						if (att.getKey().equals("aria-labelledby")) {
+							Transaction transaction = new Transaction();
+							transaction.setPageindex(i);
+							if (root.get(i).getElementsByAttributeValue("role", "link").size() == 1) {
+								transaction.setListeWertpapiername(root.get(i).getElementsByAttributeValue("role", "link").get(0).text());
+							}
+							else {
+								transaction.setListeWertpapiername(root.get(i).getElementsByAttributeValue("role", "listitem").get(1).text());
+							}
+							transaction.setListeDatum(att.getValue().substring(0, 19).split("T")[0]);
+							transaction.setListeUhrzeit(att.getValue().substring(0, 19).split("T")[1]);
+							transaction.setAktionsart(root.get(i).getElementsByAttributeValue("role", "listitem").get(0).text());
+							arrayTransactions.add(transaction);
+							break;
+						}
 					}
 				}
-			}
-			System.out.println("found " + allEntries.size() + " entries");
-			boolean first = true;
-			for (int entry : allEntries) {
-				browser.execute("child = document.getElementsByClassName('MuiGrid-root');");
-				if (first) {
-					first = false;
-					browser.execute("firstPos = child[" + entry + "].getBoundingClientRect();");
-					Thread.sleep(100);
-				}
-				browser.execute("nextPos = child[" + entry + "].getBoundingClientRect();");
-				browser.execute("scrollPos = nextPos.top - firstPos.top;");
-				browser.execute("window.scrollTo(0, scrollPos);");
-				Thread.sleep(100);
-				browser.execute("child[" + entry + "].style.backgroundColor = 'red';");
-				Thread.sleep(1000);
-				browser.execute("child[" + entry + "].click();");
-				Thread.sleep(1000);
-				browser.execute("end = document.getElementsByClassName('MuiButton-endIcon');");
-				browser.execute("end[1].click();");
-				Thread.sleep(1000);
-				browser.execute("child[" + entry + "].style.backgroundColor = 'blue';");
-				Thread.sleep(1000);
-				browser.execute("window.scrollTo(0, 0);");
-			}
+				System.out.println("arrayTransactions: " + arrayTransactions.size() + " entries");
+				System.out.println("--------------------------");			
+				////////////////////////////////
 				
-		}
-		catch (Exception e) {
-			System.out.println(e.getMessage());
+				boolean first = true;
+				int stoptest = 0;
+				for (Transaction entry : arrayTransactions) {
+					if (stoptest >= 1) {                           /////////STOPTEST
+						break;
+					}
+					//stoptest++;
+					Thread.sleep(200);
+					browser.execute("window.scrollTo(0, 0);");
+					Thread.sleep(200);
+					browser.execute("child = document.getElementsByClassName('MuiGrid-root');");
+					if (first) {
+						first = false;
+						browser.execute("firstPos = child[" + entry.getPageindex() + "].getBoundingClientRect();");
+						Thread.sleep(100);
+					}
+					browser.execute("nextPos = child[" + entry.getPageindex() + "].getBoundingClientRect();");
+					browser.execute("scrollPos = nextPos.top - firstPos.top;");
+					browser.execute("window.scrollTo(0, scrollPos);");
+					Thread.sleep(200);
+					browser.execute("child[" + entry.getPageindex() + "].style.backgroundColor = '#824110';");
+					Thread.sleep(200);
+					browser.execute("child[" + entry.getPageindex() + "].click();");
+					
+					Thread.sleep(2000);
+					
+					//after click on transaction the overlay page opens and fresh information is given
+					//that is why the document gets read again
+					Document listEntryDoc = Jsoup.parse(browser.getText());
+					Element listEntryBody = listEntryDoc.body();
+					Elements listRoot = listEntryBody.getElementsByClass("MuiDialog-paperFullScreen");
+					////////////////////////////////
+					
+					//System.out.println("MuiDialog-paperFullScreen: " + listRoot.size());
+					/*
+					System.out.println("---------");
+					for (Element single : listRoot.parents().get(0).getElementsByClass("MuiGrid-root") ) {
+						for (Element inner : single.getElementsByClass("MuiGrid-item") ) {
+							System.out.println("inner: " + inner.text());
+						}
+					}
+					System.out.println("------------------------------");
+					*/
+					for (Element single : listRoot.parents().get(0).getElementsByAttribute("href") ) {
+						entry.setWertpapiername(single.text());
+						entry.setIsin(single.attr("href").replace("/broker/security?isin=", ""));
+					}
+					for (Element single : listRoot.parents().get(0).getElementsByAttribute("data-testid") ) {
+						switch (single.attr("data-testid")) {
+							case "total-amount":
+								entry.setGesamtbetrag( single.text().replace("€", "").replace(",", "").replace(".", ",").trim() );
+								break;
+	///////////////////////////////////////////////////////////	
+							case "value-Execution price":
+								entry.setAusfuehrungspreis(single.text().replace("€", "").replace(",", "").replace(".", ",").trim() );
+								break;
+							case "value-Executed quantity":
+								entry.setAusfuehrungsstueckzahl(single.text().replace("€", "").replace(",", "").replace(".", ",").trim() );
+								break;
+							case "value-Limit price":
+								entry.setLimitpreis( single.text().replace("€", "").replace(",", "").replace(".", ",").trim() );
+								break;
+							case "value-Trading venue":
+								entry.setHandelsplatz(single.text());
+								break;
+							case "value-Transaction reference":
+								entry.setReferenz(single.text());
+								break;
+							case "value-Order fee":
+								entry.setOrdergebuehr(single.text().replace("€", "").replace(",", "").replace(".", ",").trim() );
+								break;
+							case "value-Market valuation":
+								entry.setKurswert( single.text().replace("€", "").replace(",", "").replace(".", ",").trim() );
+								break;
+	///////////////////////////////////////////////////////////							
+							case "value-Ausführungspreis":
+								entry.setAusfuehrungspreis(single.text().replace("€", "").replace(",", "").replace(".", ",").trim() );
+								break;
+							case "value-Ausgeführte Stückzahl":
+								entry.setAusfuehrungsstueckzahl(single.text().replace("€", "").replace(",", "").replace(".", ",").trim() );
+								break;
+							case "value-Limitpreis":
+								entry.setLimitpreis( single.text().replace("€", "").replace(",", "").replace(".", ",").trim() );
+								break;
+							case "value-Handelsplatz":
+								entry.setHandelsplatz(single.text());
+								break;
+							case "value-Referenz der Transaktion":
+								entry.setReferenz(single.text());
+								break;
+							case "value-Ordergebühr":
+								entry.setOrdergebuehr(single.text().replace("€", "").replace(",", "").replace(".", ",").trim() );
+								break;
+							case "value-Kurswert":
+								entry.setKurswert( single.text().replace("€", "").replace(",", "").replace(".", ",").trim() );
+								break;
+						}
+					}
+					System.out.println(entry);				
+					browser.execute("end = document.getElementsByClassName('MuiButton-endIcon');");
+					browser.execute("end[1].click();");
+					Thread.sleep(200);
+					browser.execute("child[" + entry.getPageindex() + "].style.backgroundColor = '#092904';");
+				}
+				writeToFile(arrayTransactions);
+				JOptionPane.showMessageDialog(null, "done");
+			}
+			catch (Exception e) {
+				System.out.println(e.getMessage());
+				JOptionPane.showMessageDialog(null, e.getMessage());
+			}
 		}
 	}
 	
 	private void click() {
-		//browser.execute("var asdf = document.getElementsByClassName('MuiGrid-root'); asdf.click();");
-		//browser.execute("var asdf = document.getElementsByAttributeValue('role', 'listitem'); asdf.click();");
-		//browser.execute("asdf = document.getElementsByClassName('MuiGrid-root'); asdf[38].style.backgroundColor = 'red'; asdf[38].click();");
 		browser.execute(text.getText());
 	}
 
@@ -211,75 +341,74 @@ public class Window {
 	 * Create contents of the window.
 	 */
 	protected void createContents() {
-		shell = new Shell();
-		shell.setSize(669, 703);
-		shell.setText("SWT Application");
+		shlScalablecapitalparserV = new Shell(display, SWT.CLOSE | SWT.TITLE | SWT.MIN );
+		shlScalablecapitalparserV.setSize(700, 800);
+		shlScalablecapitalparserV.setText("scalable.capital.parser v0.1");
 		
-		Button btnNewButton = new Button(shell, SWT.NONE);
-		btnNewButton.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				logic();
-			}
-		});
-		btnNewButton.setBounds(374, 629, 75, 25);
-		btnNewButton.setText("export");
-		
-		browser = new Browser(shell, SWT.NONE);
-		browser.setBounds(10, 10, 633, 586);
+		browser = new Browser(shlScalablecapitalparserV, SWT.NONE);
+		browser.setBounds(10, 10, 662, 632);
 		System.out.println(browser.getBrowserType());
 		
-		Button btnNewButton_1 = new Button(shell, SWT.NONE);
-		btnNewButton_1.addSelectionListener(new SelectionAdapter() {
+		btnLogin = new Button(shlScalablecapitalparserV, SWT.NONE);
+		btnLogin.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				browser.setUrl("https://secure.scalable.capital/u/login");
 			}
 		});
-		btnNewButton_1.setBounds(10, 629, 39, 25);
-		btnNewButton_1.setText("login");
+		btnLogin.setBounds(10, 707, 70, 25);
+		btnLogin.setText("login");
 		
-		btnTransactions = new Button(shell, SWT.NONE);
+		btnTransactions = new Button(shlScalablecapitalparserV, SWT.NONE);
 		btnTransactions.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-				browser.setUrl("https://de.scalable.capital/broker/transactions");
+				browser.setUrl("https://scalable.capital/broker/transactions");
 			}
 		});
-		btnTransactions.setBounds(55, 629, 75, 25);
+		btnTransactions.setBounds(86, 707, 105, 25);
 		btnTransactions.setText("transactions");
 		
-		btnScroll = new Button(shell, SWT.NONE);
+		btnScroll = new Button(shlScalablecapitalparserV, SWT.NONE);
 		btnScroll.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				scroll();
 			}
 		});
-		btnScroll.setBounds(136, 629, 49, 25);
+		btnScroll.setBounds(197, 707, 90, 25);
 		btnScroll.setText("scroll");
 		
-		Button btnClieck = new Button(shell, SWT.NONE);
-		btnClieck.addSelectionListener(new SelectionAdapter() {
+		btnJavaScript = new Button(shlScalablecapitalparserV, SWT.NONE);
+		btnJavaScript.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				click();
 			}
 		});
-		btnClieck.setBounds(251, 629, 39, 25);
-		btnClieck.setText("click");
+		btnJavaScript.setBounds(555, 707, 117, 25);
+		btnJavaScript.setText("JavaScript");
 		
-		text = new Text(shell, SWT.BORDER);
-		text.setBounds(10, 602, 633, 21);
+		text = new Text(shlScalablecapitalparserV, SWT.BORDER);
+		text.setBounds(10, 648, 662, 21);
+
+		textFile = new Text(shlScalablecapitalparserV, SWT.BORDER);
+		textFile.setText("C:\\Users\\Public\\scalable_export.csv");
+		textFile.setBounds(62, 678, 610, 21);
 		
-		Button btnEntries = new Button(shell, SWT.NONE);
-		btnEntries.addSelectionListener(new SelectionAdapter() {
+		btnExport = new Button(shlScalablecapitalparserV, SWT.NONE);
+		btnExport.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				entries();
 			}
 		});
-		btnEntries.setBounds(191, 629, 54, 25);
-		btnEntries.setText("entries");
+		btnExport.setBounds(293, 707, 85, 25);
+		btnExport.setText("export");
+		
+		Label lblNewLabel = new Label(shlScalablecapitalparserV, SWT.NONE);
+		lblNewLabel.setAlignment(SWT.RIGHT);
+		lblNewLabel.setBounds(10, 681, 46, 20);
+		lblNewLabel.setText("file");		
 	}
 }
