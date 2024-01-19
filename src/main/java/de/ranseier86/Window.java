@@ -23,6 +23,7 @@ import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.browser.Browser;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Monitor;
+import org.eclipse.wb.swt.SWTResourceManager;
 
 public class Window {
 
@@ -31,10 +32,11 @@ public class Window {
 	private Button btnTransactions;
 	private Button btnScroll;
 	private Button btnJavaScript;
-	private Button btnLogin;
 	private Button btnExport;
-	private Text text;
+	private Button btnOpenExport;
+	private Text txtJavascriptCodeHere;
 	private Text textFile;
+	private Text textAmount;
 	private Display display;
 	
 	/**
@@ -157,6 +159,7 @@ public class Window {
 	private void scroll() {
 		//browser.execute("last = 0; while (true) { alert(document.body.scrollHeight); last = document.body.scrollHeight; window.scrollTo(0, document.body.scrollHeight); alert(document.body.scrollHeight); if ( document.body.scrollHeight == last ) { alert('end'); break; } } ");
 		try {
+			setState(false);			
 			int last = 0;
 			while (last != browser.getText().length()) {
 				last = browser.getText().length();
@@ -164,11 +167,22 @@ public class Window {
 				Thread.sleep(1000);
 			}
 			browser.execute("window.scrollTo(0, 0);");
+			setState(true);
 		}
 		catch (Exception e) {
 			System.out.println(e.getMessage());
 		}
-		System.out.println("done");
+		JOptionPane.showMessageDialog(null, "scroll done");
+	}
+	
+	private void setState(boolean state) {
+		textFile.setEnabled(state);
+		txtJavascriptCodeHere.setEnabled(state);
+		btnScroll.setEnabled(state);
+		btnTransactions.setEnabled(state);
+		btnExport.setEnabled(state);
+		btnJavaScript.setEnabled(state);
+		btnOpenExport.setEnabled(state);
 	}
 	
 	private void entries() {
@@ -177,13 +191,7 @@ public class Window {
 		}
 		else {
 			try {
-				textFile.setEnabled(false);
-				text.setEnabled(false);
-				btnLogin.setEnabled(false);
-				btnScroll.setEnabled(false);
-				btnTransactions.setEnabled(false);
-				btnExport.setEnabled(false);
-				btnJavaScript.setEnabled(false);
+				setState(false);
 				Thread.sleep(100);
 				
 				ArrayList<Transaction> arrayTransactions = new ArrayList<Transaction>();
@@ -196,7 +204,9 @@ public class Window {
 				
 				///// values from the overview list
 				// also init of all transaction elements
-				for (int i = 0; i <= root.size()-1; i++) {
+				int amount = Integer.valueOf(textAmount.getText());
+				System.out.println("getting " + amount + " transactions");
+				for (int i = 0; i <= root.size() - 1; i++) {
 					for ( Attribute att : root.get(i).attributes().asList() ) {
 						if (att.getKey().equals("aria-labelledby")) {
 							Transaction transaction = new Transaction();
@@ -214,18 +224,19 @@ public class Window {
 							break;
 						}
 					}
+					if (amount > 0) {
+						System.out.println("size: " + arrayTransactions.size());
+						if (arrayTransactions.size() >= amount) {
+							break;
+						}
+					}
 				}
 				System.out.println("arrayTransactions: " + arrayTransactions.size() + " entries");
 				System.out.println("--------------------------");			
 				////////////////////////////////
 				
 				boolean first = true;
-				int stoptest = 0;
 				for (Transaction entry : arrayTransactions) {
-					if (stoptest >= 1) {                           /////////STOPTEST
-						break;
-					}
-					//stoptest++;
 					Thread.sleep(200);
 					browser.execute("window.scrollTo(0, 0);");
 					Thread.sleep(200);
@@ -325,6 +336,7 @@ public class Window {
 				}
 				writeToFile(arrayTransactions);
 				JOptionPane.showMessageDialog(null, "done");
+				setState(true);
 			}
 			catch (Exception e) {
 				System.out.println(e.getMessage());
@@ -334,7 +346,7 @@ public class Window {
 	}
 	
 	private void click() {
-		browser.execute(text.getText());
+		browser.execute(txtJavascriptCodeHere.getText());
 	}
 
 	/**
@@ -342,22 +354,13 @@ public class Window {
 	 */
 	protected void createContents() {
 		shlScalablecapitalparserV = new Shell(display, SWT.CLOSE | SWT.TITLE | SWT.MIN );
-		shlScalablecapitalparserV.setSize(700, 800);
+		shlScalablecapitalparserV.setBackground(SWTResourceManager.getColor(0, 0, 0));
+		shlScalablecapitalparserV.setSize(1028, 866);
 		shlScalablecapitalparserV.setText("scalable.capital.parser v0.1");
 		
 		browser = new Browser(shlScalablecapitalparserV, SWT.NONE);
-		browser.setBounds(10, 10, 662, 632);
+		browser.setBounds(10, 10, 990, 632);
 		System.out.println(browser.getBrowserType());
-		
-		btnLogin = new Button(shlScalablecapitalparserV, SWT.NONE);
-		btnLogin.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				browser.setUrl("https://secure.scalable.capital/u/login");
-			}
-		});
-		btnLogin.setBounds(10, 707, 70, 25);
-		btnLogin.setText("login");
 		
 		btnTransactions = new Button(shlScalablecapitalparserV, SWT.NONE);
 		btnTransactions.addSelectionListener(new SelectionAdapter() {
@@ -366,7 +369,7 @@ public class Window {
 				browser.setUrl("https://scalable.capital/broker/transactions");
 			}
 		});
-		btnTransactions.setBounds(86, 707, 105, 25);
+		btnTransactions.setBounds(10, 707, 105, 25);
 		btnTransactions.setText("transactions");
 		
 		btnScroll = new Button(shlScalablecapitalparserV, SWT.NONE);
@@ -376,7 +379,7 @@ public class Window {
 				scroll();
 			}
 		});
-		btnScroll.setBounds(197, 707, 90, 25);
+		btnScroll.setBounds(121, 707, 90, 25);
 		btnScroll.setText("scroll");
 		
 		btnJavaScript = new Button(shlScalablecapitalparserV, SWT.NONE);
@@ -386,15 +389,16 @@ public class Window {
 				click();
 			}
 		});
-		btnJavaScript.setBounds(555, 707, 117, 25);
+		btnJavaScript.setBounds(883, 707, 117, 25);
 		btnJavaScript.setText("JavaScript");
 		
-		text = new Text(shlScalablecapitalparserV, SWT.BORDER);
-		text.setBounds(10, 648, 662, 21);
+		txtJavascriptCodeHere = new Text(shlScalablecapitalparserV, SWT.BORDER);
+		txtJavascriptCodeHere.setText("JavaScript Code here (you do not need this)");
+		txtJavascriptCodeHere.setBounds(10, 648, 990, 21);
 
 		textFile = new Text(shlScalablecapitalparserV, SWT.BORDER);
 		textFile.setText("C:\\Users\\Public\\scalable_export.csv");
-		textFile.setBounds(62, 678, 610, 21);
+		textFile.setBounds(62, 678, 938, 21);
 		
 		btnExport = new Button(shlScalablecapitalparserV, SWT.NONE);
 		btnExport.addSelectionListener(new SelectionAdapter() {
@@ -403,12 +407,50 @@ public class Window {
 				entries();
 			}
 		});
-		btnExport.setBounds(293, 707, 85, 25);
+		btnExport.setBounds(217, 707, 85, 25);
 		btnExport.setText("export");
+		
+		btnOpenExport = new Button(shlScalablecapitalparserV, SWT.NONE);
+		btnOpenExport.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				try {
+					Runtime.getRuntime().exec("explorer.exe " + textFile.getText());					
+				}
+				catch (Exception ex) {
+					System.out.println(ex.getMessage());
+				}
+			}
+		});
+		btnOpenExport.setBounds(308, 707, 85, 25);
+		btnOpenExport.setText("open file");		
 		
 		Label lblNewLabel = new Label(shlScalablecapitalparserV, SWT.NONE);
 		lblNewLabel.setAlignment(SWT.RIGHT);
 		lblNewLabel.setBounds(10, 681, 46, 20);
-		lblNewLabel.setText("file");		
+		lblNewLabel.setText("file");
+		lblNewLabel.setBackground(SWTResourceManager.getColor(0, 0, 0));
+		lblNewLabel.setForeground(SWTResourceManager.getColor(255, 255, 255));
+		
+		Label lblDesc = new Label(shlScalablecapitalparserV, SWT.NONE);
+		lblDesc.setAlignment(SWT.LEFT);
+		lblDesc.setBounds(10, 740, 681, 75);
+		lblDesc.setText(
+				"'amount of transactions' defines amount of export (0 = all).\n" +
+				"login. press 'transaction'. press 'scroll' to load all transactions (wait until done).\n" +
+				"press 'export'. you get a 'done' message box when done.");
+		lblDesc.setBackground(SWTResourceManager.getColor(0, 0, 0));
+		lblDesc.setForeground(SWTResourceManager.getColor(255, 0, 0));
+		
+		textAmount = new Text(shlScalablecapitalparserV, SWT.BORDER);
+		textAmount.setText("0");
+		textAmount.setBounds(625, 707, 55, 25);
+		
+		Label lblAmount = new Label(shlScalablecapitalparserV, SWT.NONE);
+		lblAmount.setAlignment(SWT.LEFT);
+		lblAmount.setBounds(465, 707, 160, 25);
+		lblAmount.setText("amount of transactions");
+		lblAmount.setBackground(SWTResourceManager.getColor(0, 0, 0));
+		lblAmount.setForeground(SWTResourceManager.getColor(255, 255, 255));		
 	}
 }
