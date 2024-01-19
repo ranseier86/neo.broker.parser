@@ -45,6 +45,7 @@ public class Window {
 	 */
 	public static void main(String[] args) {
 		try {
+			//-Dorg.eclipse.swt.browser.DefaultType=edge
 			Window window = new Window();
 			window.open();
 		} catch (Exception e) {
@@ -178,6 +179,7 @@ public class Window {
 	private void setState(boolean state) {
 		textFile.setEnabled(state);
 		txtJavascriptCodeHere.setEnabled(state);
+		textAmount.setEnabled(state);
 		btnScroll.setEnabled(state);
 		btnTransactions.setEnabled(state);
 		btnExport.setEnabled(state);
@@ -356,11 +358,19 @@ public class Window {
 		shlScalablecapitalparserV = new Shell(display, SWT.CLOSE | SWT.TITLE | SWT.MIN );
 		shlScalablecapitalparserV.setBackground(SWTResourceManager.getColor(0, 0, 0));
 		shlScalablecapitalparserV.setSize(1028, 866);
-		shlScalablecapitalparserV.setText("scalable.capital.parser v0.1");
+		shlScalablecapitalparserV.setText("scalable.capital.parser v0.2");
 		
 		browser = new Browser(shlScalablecapitalparserV, SWT.NONE);
 		browser.setBounds(10, 10, 990, 632);
-		System.out.println(browser.getBrowserType());
+		shlScalablecapitalparserV.setText(shlScalablecapitalparserV.getText() + " mode: " + browser.getBrowserType());
+		
+		
+		if (browser.getBrowserType() == "ie") {
+			JOptionPane.showMessageDialog(null, "mode is 'ie'. this tool will not work. did you run with correct vm arguments?");
+		}
+		else if (browser.getBrowserType() != "edge") {
+			JOptionPane.showMessageDialog(null, "mode is not 'edge'. this tool might not work");
+		}
 		
 		btnTransactions = new Button(shlScalablecapitalparserV, SWT.NONE);
 		btnTransactions.addSelectionListener(new SelectionAdapter() {
