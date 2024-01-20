@@ -13,6 +13,8 @@ public class Transaction {
 	private String handelsplatz;
 	private String listeWertpapiername;
 	private String listeDatum;
+	private String listeJahr;
+	private String listeMonat;
 	private String listeUhrzeit;
 	private String aktionsart;
 	private String isin;
@@ -30,6 +32,8 @@ public class Transaction {
 		this.handelsplatz = "";
 		this.listeWertpapiername = "";
 		this.listeDatum = "";
+		this.listeJahr = "";
+		this.listeMonat = "";
 		this.listeUhrzeit = "";
 		this.aktionsart = "";
 		this.isin = "";
@@ -50,7 +54,7 @@ public class Transaction {
 				+ " referenz: %s\n"
 				+ " handelsplatz: %s\n"
 				+ " listeWertpapiername: %s\n"
-				+ " listeDatum: %s\n"
+				+ " listeDatum: %s (Jahr: %s / Monat: %s)\n"
 				+ " listeUhrzeit: %s\n"
 				+ " aktionsart: %s\n"
 				+ " isin: %s\n"
@@ -67,10 +71,28 @@ public class Transaction {
 				this.handelsplatz,
 				this.listeWertpapiername,
 				this.listeDatum,
+				this.listeJahr,
+				this.listeMonat,
 				this.listeUhrzeit,
 				this.aktionsart,
 				this.isin
 				);
+	}
+
+	public String getListeJahr() {
+		return listeJahr;
+	}
+
+	public void setListeJahr(String listeJahr) {
+		this.listeJahr = listeJahr;
+	}
+
+	public String getListeMonat() {
+		return listeMonat;
+	}
+
+	public void setListeMonat(String listeMonat) {
+		this.listeMonat = listeMonat;
 	}
 
 	public String getIsin() {
@@ -175,6 +197,8 @@ public class Transaction {
 
 	public void setListeDatum(String listeDatum) {
 		this.listeDatum = listeDatum;
+		this.listeJahr = listeDatum.substring(0,4);
+		this.listeMonat = listeDatum.substring(5,7);
 	}
 
 	public String getListeUhrzeit() {

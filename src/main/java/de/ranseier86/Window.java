@@ -120,6 +120,8 @@ public class Window {
         			"Action;" +
         			"Trading Venue;" +        			
         			"List Date;" +
+        			"List Year;" +
+        			"List Month;" +
         			"List Time;" +        			
         			"Total Amount;" +
         			"Execution Price;" +
@@ -139,6 +141,8 @@ public class Window {
 	        			transaction.getAktionsart() + ";" +
 	        			transaction.getHandelsplatz() + ";" +	        			
 	        			transaction.getListeDatum() + ";" +
+	        			transaction.getListeJahr() + ";" +
+	        			transaction.getListeMonat() + ";" +
 	        			transaction.getListeUhrzeit() + ";" +	        			
 	        			transaction.getGesamtbetrag() + ";" +
 	        			transaction.getAusfuehrungspreis() + ";" +
