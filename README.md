@@ -13,3 +13,22 @@ run in command line with vm arguments or use batch file in /bin
 ```
 start javaw.exe -Dorg.eclipse.swt.browser.DefaultType=edge -jar scalable.capital.parser.jar
 ```
+
+Wertpapiername
+Gesamtbetrag
+Ausführungspreis
+Ausfuehrungsstückzahl
+Kurswert
+Ordergebühr
+Limitpreis
+Referenz der Transaktion
+Handelsplatz
+Datum
+Jahr
+Monat
+Uhrzeit
+Aktion
+ISIN
+
+tags english: scalable capital parser export exporter transaction transactions
+tags german: scalable capital parser export exportieren transaktion transaktionen
