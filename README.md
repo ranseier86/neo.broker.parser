@@ -50,8 +50,11 @@ start javaw.exe -Dorg.eclipse.swt.browser.DefaultType=edge -jar scalable.capital
 
 # tags
 
+## general
+scalable capital trade republic scalablecapital traderepublic neo broker neobroker parser 
+
 ## english
-scalable capital parser export exporter transaction transactions
+export exporter transaction transactions
 
 ## german
-scalable capital parser export exportieren transaktion transaktionen
+exportieren transaktion transaktionen
