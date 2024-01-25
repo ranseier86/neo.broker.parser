@@ -29,10 +29,12 @@ public class Window {
 
 	protected Shell shlScalablecapitalparserV;
 	private Browser browser;
-	private Button btnTransactions;
+	private Button btnTransactionsScalable;
+	private Button btnTransactionsTradeRepublic;
 	private Button btnScroll;
 	private Button btnJavaScript;
-	private Button btnExport;
+	private Button btnExportScalable;
+	private Button btnExportTradeRepublic;
 	private Button btnOpenExport;
 	private Text txtJavascriptCodeHere;
 	private Text textFile;
@@ -69,7 +71,7 @@ public class Window {
 		shlScalablecapitalparserV.open();
 		shlScalablecapitalparserV.layout();
 		centerWindow();
-		browser.setUrl("https://scalable.capital/broker/transactions");
+		browser.setUrl("about:blank");
 		while (!shlScalablecapitalparserV.isDisposed()) {
 			if (!display.readAndDispatch()) {
 				display.sleep();
@@ -113,6 +115,7 @@ public class Window {
 	        FileWriter myWriter = new FileWriter(textFile.getText());
         	myWriter.write(
         			"Pageindex;" +
+        			"Remark;" +
         			"Transaction Reference;" +
         			"ISIN;" +
         			"Security;" +
@@ -134,6 +137,7 @@ public class Window {
 	        for (Transaction transaction : transactions) {
 	        	myWriter.write(
 	        			transaction.getPageindex() + ";" +
+	        			transaction.getBemerkung() + ";" +
 	        			transaction.getReferenz() + ";" +
 	        			transaction.getIsin() + ";" +
 	        			transaction.getWertpapiername() + ";" +
@@ -185,17 +189,185 @@ public class Window {
 		txtJavascriptCodeHere.setEnabled(state);
 		textAmount.setEnabled(state);
 		btnScroll.setEnabled(state);
-		btnTransactions.setEnabled(state);
-		btnExport.setEnabled(state);
+		btnTransactionsScalable.setEnabled(state);
+		btnTransactionsTradeRepublic.setEnabled(state);
+		btnExportScalable.setEnabled(state);
+		btnExportTradeRepublic.setEnabled(state);
 		btnJavaScript.setEnabled(state);
 		btnOpenExport.setEnabled(state);
 	}
 	
-	private void entries() {
+	private String removeSomething(String input) {
+		return input.replace("+", "").replace("€", "").replace(",", "").replace(".", ",").trim();
+	}
+	
+	private void entriesTraderepublic() {
+		boolean goOn = true;
+		if (!checkProfileLanguage("traderepublic")) {
+			JOptionPane.showMessageDialog(null, "Language not english");
+			goOn = false;
+		}
 		if (!testFile()) {
 			JOptionPane.showMessageDialog(null, "File not valid");
+			goOn = false;
 		}
-		else {
+		
+		if (goOn) {
+			try {
+				setState(false);
+				Thread.sleep(100);
+				
+				ArrayList<Transaction> arrayTransactions = new ArrayList<Transaction>();
+				
+				//read the document
+				Document doc = Jsoup.parse(browser.getText());
+				Element body = doc.body();
+				Elements root = body.getElementsByClass("timelineEventAction");
+				////////////////
+				
+				///// values from the overview list
+				// also init of all transaction elements
+				int amount = Integer.valueOf(textAmount.getText());
+				System.out.println("getting " + amount + " transactions");
+				for (int i = 0; i <= root.size() - 1; i++) {
+					Transaction transaction = new Transaction();
+					transaction.setPageindex(i);
+					transaction.setListeWertpapiername(root.get(i).getElementsByClass("timelineEvent__title").attr("title"));
+					transaction.setWertpapiername(root.get(i).getElementsByClass("timelineEvent__title").text());
+					String subtitleText = root.get(i).getElementsByClass("timelineEvent__subtitle").text();
+					String Tag = subtitleText.split("/")[0];
+					String Monat = subtitleText.split("/")[1].substring(0, 2);
+					String Datum = Tag + "." + Monat + ".";
+					transaction.setListeDatum("traderepublic", Datum);
+					transaction.setGesamtbetrag(removeSomething( root.get(i).getElementsByClass("timelineEvent__price").text() ));
+					arrayTransactions.add(transaction);
+					if (amount > 0) {
+						if (arrayTransactions.size() >= amount) {
+							break;
+						}
+					}
+				}
+				System.out.println("arrayTransactions: " + arrayTransactions.size() + " entries");
+				System.out.println("--------------------------");			
+				////////////////////////////////				
+				
+				boolean first = true;
+				int counter = 1;
+				for (Transaction entry : arrayTransactions) {
+					System.out.println(counter);
+					counter++;
+					Thread.sleep(200);
+					browser.execute("window.scrollTo(0, 0);");
+					Thread.sleep(200);
+					browser.execute("child = document.getElementsByClassName('timelineEventAction');");
+					if (first) {
+						first = false;
+						browser.execute("firstPos = child[" + entry.getPageindex() + "].getBoundingClientRect();");
+						Thread.sleep(100);
+					}
+					browser.execute("nextPos = child[" + entry.getPageindex() + "].getBoundingClientRect();");
+					browser.execute("scrollPos = nextPos.top - firstPos.top;");
+					browser.execute("window.scrollTo(0, scrollPos);");
+					Thread.sleep(200);
+					browser.execute("child[" + entry.getPageindex() + "].style.backgroundColor = '#824110';");
+					Thread.sleep(200);
+					browser.execute("child[" + entry.getPageindex() + "].click();");
+					
+					Thread.sleep(1000);
+					
+					//after click on transaction the overlay page opens and fresh information is given
+					//that is why the document gets read again
+					Document listEntryDoc = Jsoup.parse(browser.getText());
+					Element listEntryBody = listEntryDoc.body();
+					Elements listRoot = listEntryBody.getElementsByClass("sideModalLayout__content");
+					////////////////////////////////
+					for (Element elem : listRoot.get(0).getElementsByClass("timelineDetail__section")) {
+						String key = elem.getElementsByClass("detailHeader__heading").text();
+						String value = elem.getElementsByClass("detailHeader__subheading -time").text();
+						//System.out.println("key: " + key + "   value: " + value);
+						if (key.length() > 0) {
+							entry.setBemerkung(key);
+							if (key.contains("You added")) {
+								entry.setAktionsart("Added");
+								if (entry.getWertpapiername().equals("Cash in")) {
+									entry.setAktionsart(entry.getWertpapiername());
+								}
+							}
+							else if (key.contains("You received")) {
+								entry.setAktionsart("Received");
+								if (entry.getWertpapiername().equals("Interest")) {
+									entry.setAktionsart(entry.getWertpapiername());
+								}
+							}														
+						}
+						if (value.length() > 0) {
+							switch (value.split(" ")[0]) {
+								case "Jan":
+									entry.setListeMonat("01");
+									break;
+								case "Dec":
+									entry.setListeMonat("12");
+									break;									
+							}
+							entry.setListeJahr("20" + value.split(" ")[1]);
+							entry.setListeDatum("traderepublic", entry.getListeDatum() + entry.getListeJahr());
+							entry.setListeUhrzeit(value.split(" ")[2]);
+						}
+					}
+					
+					for (Element elem : listRoot.get(0).getElementsByClass("detailTable__row")) {
+						String key = elem.getElementsByClass("detailTable__label").text();
+						String value = elem.getElementsByClass("detailTable__value").text();
+						//System.out.println("key: " + key + "   value: " + value);
+						//System.out.println(entry);
+						switch (key) {
+							case "Order Type":
+								entry.setAktionsart(value);
+								break;
+							case "Fee":
+								entry.setOrdergebuehr(removeSomething(value));
+								break;
+							case "Shares":
+								entry.setAusfuehrungsstueckzahl(removeSomething(value));
+								break;
+							case "Share price":
+								entry.setAusfuehrungspreis(removeSomething(value));
+								break;
+							case "Total":
+								entry.setGesamtbetrag(removeSomething(value));
+								break;									
+						}
+					}
+					
+					browser.execute("end = document.getElementsByClassName('closeButton sideModal__close');");
+					browser.execute("end[1].click();");
+					Thread.sleep(200);
+					browser.execute("child[" + entry.getPageindex() + "].style.backgroundColor = '#092904';");
+				}
+				writeToFile(arrayTransactions);
+				JOptionPane.showMessageDialog(null, "done");
+				setState(true);
+			
+			}
+			catch (Exception e) {
+				System.out.println(e.getMessage());
+				JOptionPane.showMessageDialog(null, e.getMessage());
+			}
+		}			
+	}
+	
+	private void entriesScalable() {
+		boolean goOn = true;
+		if (!checkProfileLanguage("scalable")) {
+			JOptionPane.showMessageDialog(null, "Language not english");
+			goOn = false;
+		}
+		if (!testFile()) {
+			JOptionPane.showMessageDialog(null, "File not valid");
+			goOn = false;
+		}
+		
+		if (goOn) {
 			try {
 				setState(false);
 				Thread.sleep(100);
@@ -223,7 +395,7 @@ public class Window {
 							else {
 								transaction.setListeWertpapiername(root.get(i).getElementsByAttributeValue("role", "listitem").get(1).text());
 							}
-							transaction.setListeDatum(att.getValue().substring(0, 19).split("T")[0]);
+							transaction.setListeDatum("scalable", att.getValue().substring(0, 19).split("T")[0]);
 							transaction.setListeUhrzeit(att.getValue().substring(0, 19).split("T")[1]);
 							transaction.setAktionsart(root.get(i).getElementsByAttributeValue("role", "listitem").get(0).text());
 							arrayTransactions.add(transaction);
@@ -293,7 +465,7 @@ public class Window {
 								entry.setAusfuehrungspreis(single.text().replace("€", "").replace(",", "").replace(".", ",").trim() );
 								break;
 							case "value-Executed quantity":
-								entry.setAusfuehrungsstueckzahl(single.text().replace("€", "").replace(",", "").replace(".", ",").trim() );
+								entry.setAusfuehrungsstueckzahl(removeSomething( single.text() ));
 								break;
 							case "value-Limit price":
 								entry.setLimitpreis( single.text().replace("€", "").replace(",", "").replace(".", ",").trim() );
@@ -354,6 +526,30 @@ public class Window {
 	private void click() {
 		browser.execute(txtJavascriptCodeHere.getText());
 	}
+	
+	private boolean checkProfileLanguage(String broker) {
+		//read the document
+		Document doc = Jsoup.parse(browser.getText());
+		Element body = doc.body();
+		////////////////
+		if (broker.equals("traderepublic")) {
+			if (body.getElementsByClass("cashBalance__title").text().equals("Cash")) {
+				return true;
+			}
+			else {
+				return false;
+			}
+		}
+		else if (broker.equals("scalable")) {
+			if (body.getElementsByClass("MuiListItemText-primary").text().split(" ")[0].equals("Home")) {
+				return true;
+			}
+			else {
+				return false;
+			}
+		}
+		return false;
+	}
 
 	/**
 	 * Create contents of the window.
@@ -361,11 +557,11 @@ public class Window {
 	protected void createContents() {
 		shlScalablecapitalparserV = new Shell(display, SWT.CLOSE | SWT.TITLE | SWT.MIN );
 		shlScalablecapitalparserV.setBackground(SWTResourceManager.getColor(0, 0, 0));
-		shlScalablecapitalparserV.setSize(1028, 866);
-		shlScalablecapitalparserV.setText("scalable.capital.parser v0.2");
+		shlScalablecapitalparserV.setSize(1028, 970);
+		shlScalablecapitalparserV.setText("scalable.capital.parser v0.3");
 		
 		browser = new Browser(shlScalablecapitalparserV, SWT.NONE);
-		browser.setBounds(10, 10, 990, 632);
+		browser.setBounds(10, 10, 990, 698);
 		shlScalablecapitalparserV.setText(shlScalablecapitalparserV.getText() + " mode: " + browser.getBrowserType());
 		
 		
@@ -376,15 +572,25 @@ public class Window {
 			JOptionPane.showMessageDialog(null, "mode is not 'edge'. this tool might not work");
 		}
 		
-		btnTransactions = new Button(shlScalablecapitalparserV, SWT.NONE);
-		btnTransactions.addSelectionListener(new SelectionAdapter() {
+		btnTransactionsScalable = new Button(shlScalablecapitalparserV, SWT.NONE);
+		btnTransactionsScalable.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				browser.setUrl("https://scalable.capital/broker/transactions");
 			}
 		});
-		btnTransactions.setBounds(10, 707, 105, 25);
-		btnTransactions.setText("transactions");
+		btnTransactionsScalable.setBounds(10, 807, 105, 25);
+		btnTransactionsScalable.setText("transactions S");
+		
+		btnTransactionsTradeRepublic = new Button(shlScalablecapitalparserV, SWT.NONE);
+		btnTransactionsTradeRepublic.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				browser.setUrl("https://app.traderepublic.com/profile/transactions");
+			}
+		});
+		btnTransactionsTradeRepublic.setBounds(10, 777, 105, 25);
+		btnTransactionsTradeRepublic.setText("transactions TR");
 		
 		btnScroll = new Button(shlScalablecapitalparserV, SWT.NONE);
 		btnScroll.addSelectionListener(new SelectionAdapter() {
@@ -393,7 +599,7 @@ public class Window {
 				scroll();
 			}
 		});
-		btnScroll.setBounds(121, 707, 90, 25);
+		btnScroll.setBounds(121, 807, 90, 25);
 		btnScroll.setText("scroll");
 		
 		btnJavaScript = new Button(shlScalablecapitalparserV, SWT.NONE);
@@ -403,26 +609,36 @@ public class Window {
 				click();
 			}
 		});
-		btnJavaScript.setBounds(883, 707, 117, 25);
+		btnJavaScript.setBounds(883, 807, 117, 25);
 		btnJavaScript.setText("JavaScript");
 		
 		txtJavascriptCodeHere = new Text(shlScalablecapitalparserV, SWT.BORDER);
 		txtJavascriptCodeHere.setText("JavaScript Code here (you do not need this)");
-		txtJavascriptCodeHere.setBounds(10, 648, 990, 21);
+		txtJavascriptCodeHere.setBounds(10, 714, 990, 21);
 
 		textFile = new Text(shlScalablecapitalparserV, SWT.BORDER);
 		textFile.setText("C:\\Users\\Public\\scalable_export.csv");
-		textFile.setBounds(62, 678, 938, 21);
+		textFile.setBounds(62, 744, 938, 21);
 		
-		btnExport = new Button(shlScalablecapitalparserV, SWT.NONE);
-		btnExport.addSelectionListener(new SelectionAdapter() {
+		btnExportScalable = new Button(shlScalablecapitalparserV, SWT.NONE);
+		btnExportScalable.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-				entries();
+				entriesScalable();
 			}
 		});
-		btnExport.setBounds(217, 707, 85, 25);
-		btnExport.setText("export");
+		btnExportScalable.setBounds(217, 807, 85, 25);
+		btnExportScalable.setText("export S");
+		
+		btnExportTradeRepublic = new Button(shlScalablecapitalparserV, SWT.NONE);
+		btnExportTradeRepublic.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				entriesTraderepublic();
+			}
+		});
+		btnExportTradeRepublic.setBounds(217, 777, 85, 25);
+		btnExportTradeRepublic.setText("export TR");		
 		
 		btnOpenExport = new Button(shlScalablecapitalparserV, SWT.NONE);
 		btnOpenExport.addSelectionListener(new SelectionAdapter() {
@@ -436,19 +652,19 @@ public class Window {
 				}
 			}
 		});
-		btnOpenExport.setBounds(308, 707, 85, 25);
+		btnOpenExport.setBounds(308, 807, 85, 25);
 		btnOpenExport.setText("open file");		
 		
 		Label lblNewLabel = new Label(shlScalablecapitalparserV, SWT.NONE);
 		lblNewLabel.setAlignment(SWT.RIGHT);
-		lblNewLabel.setBounds(10, 681, 46, 20);
+		lblNewLabel.setBounds(10, 745, 46, 20);
 		lblNewLabel.setText("file");
 		lblNewLabel.setBackground(SWTResourceManager.getColor(0, 0, 0));
 		lblNewLabel.setForeground(SWTResourceManager.getColor(255, 255, 255));
 		
 		Label lblDesc = new Label(shlScalablecapitalparserV, SWT.NONE);
 		lblDesc.setAlignment(SWT.LEFT);
-		lblDesc.setBounds(10, 740, 681, 75);
+		lblDesc.setBounds(10, 838, 990, 75);
 		lblDesc.setText(
 				"'amount of transactions' defines amount of export (0 = all).\n" +
 				"login. press 'transaction'. press 'scroll' to load all transactions (wait until done).\n" +
@@ -458,11 +674,11 @@ public class Window {
 		
 		textAmount = new Text(shlScalablecapitalparserV, SWT.BORDER);
 		textAmount.setText("0");
-		textAmount.setBounds(625, 707, 55, 25);
+		textAmount.setBounds(625, 807, 55, 25);
 		
 		Label lblAmount = new Label(shlScalablecapitalparserV, SWT.NONE);
 		lblAmount.setAlignment(SWT.LEFT);
-		lblAmount.setBounds(465, 707, 160, 25);
+		lblAmount.setBounds(465, 807, 160, 25);
 		lblAmount.setText("amount of transactions");
 		lblAmount.setBackground(SWTResourceManager.getColor(0, 0, 0));
 		lblAmount.setForeground(SWTResourceManager.getColor(255, 255, 255));		

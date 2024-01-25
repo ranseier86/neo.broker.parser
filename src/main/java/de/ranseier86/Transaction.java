@@ -18,6 +18,7 @@ public class Transaction {
 	private String listeUhrzeit;
 	private String aktionsart;
 	private String isin;
+	private String bemerkung;
 	
 	public Transaction () {
 		this.pageindex = 0;
@@ -37,6 +38,7 @@ public class Transaction {
 		this.listeUhrzeit = "";
 		this.aktionsart = "";
 		this.isin = "";
+		this.bemerkung = "";
 	}
 
 	public String toString() {
@@ -58,6 +60,7 @@ public class Transaction {
 				+ " listeUhrzeit: %s\n"
 				+ " aktionsart: %s\n"
 				+ " isin: %s\n"
+				+ " bemerkung: %s\n"
 				+ "#############################\n"
 				+ "", this.pageindex,
 				this.wertpapiername, 
@@ -75,8 +78,17 @@ public class Transaction {
 				this.listeMonat,
 				this.listeUhrzeit,
 				this.aktionsart,
-				this.isin
+				this.isin,
+				this.bemerkung
 				);
+	}
+
+	public String getBemerkung() {
+		return bemerkung;
+	}
+
+	public void setBemerkung(String bemerkung) {
+		this.bemerkung = bemerkung;
 	}
 
 	public String getListeJahr() {
@@ -195,10 +207,19 @@ public class Transaction {
 		return listeDatum;
 	}
 
-	public void setListeDatum(String listeDatum) {
-		this.listeDatum = listeDatum;
-		this.listeJahr = listeDatum.substring(0,4);
-		this.listeMonat = listeDatum.substring(5,7);
+	public void setListeDatum(String broker, String listeDatum) {
+		if (broker.equals("scaleable")) {
+			this.listeDatum = listeDatum;
+			this.listeJahr = listeDatum.substring(0,4);
+			this.listeMonat = listeDatum.substring(5,7);			
+		}
+		else if (broker.equals("traderepublic")) {
+			this.listeDatum = listeDatum;
+		}
+		else {
+			this.listeDatum = "no broker set";
+		}
+
 	}
 
 	public String getListeUhrzeit() {
