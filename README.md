@@ -1,4 +1,5 @@
-# scalable.capital.parser
+# neo.broker.parser
+i added support for Trade Republic besides Scalable Capital and now the naming is not good anymore. so i will call this tool neo.broker.parser for now
 
 this tool saved you some work? consider support via https://www.paypal.com/donate/?hosted_button_id=L9526F6FVGKJ2
 
