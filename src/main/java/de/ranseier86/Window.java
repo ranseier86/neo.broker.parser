@@ -198,7 +198,7 @@ public class Window {
 	}
 	
 	private String removeSomething(String input) {
-		return input.replace("+", "").replace("€", "").replace(",", "").replace(".", ",").trim();
+		return input.replace("+", "").replace("ï¿½", "").replace(",", "").replace(".", ",").trim();
 	}
 	
 	private void entriesTraderepublic() {
@@ -458,17 +458,17 @@ public class Window {
 					for (Element single : listRoot.parents().get(0).getElementsByAttribute("data-testid") ) {
 						switch (single.attr("data-testid")) {
 							case "total-amount":
-								entry.setGesamtbetrag( single.text().replace("€", "").replace(",", "").replace(".", ",").trim() );
+								entry.setGesamtbetrag( single.text().replace("ï¿½", "").replace(",", "").replace(".", ",").trim() );
 								break;
 	///////////////////////////////////////////////////////////	
 							case "value-Execution price":
-								entry.setAusfuehrungspreis(single.text().replace("€", "").replace(",", "").replace(".", ",").trim() );
+								entry.setAusfuehrungspreis(single.text().replace("ï¿½", "").replace(",", "").replace(".", ",").trim() );
 								break;
 							case "value-Executed quantity":
 								entry.setAusfuehrungsstueckzahl(removeSomething( single.text() ));
 								break;
 							case "value-Limit price":
-								entry.setLimitpreis( single.text().replace("€", "").replace(",", "").replace(".", ",").trim() );
+								entry.setLimitpreis( single.text().replace("ï¿½", "").replace(",", "").replace(".", ",").trim() );
 								break;
 							case "value-Trading venue":
 								entry.setHandelsplatz(single.text());
@@ -477,20 +477,20 @@ public class Window {
 								entry.setReferenz(single.text());
 								break;
 							case "value-Order fee":
-								entry.setOrdergebuehr(single.text().replace("€", "").replace(",", "").replace(".", ",").trim() );
+								entry.setOrdergebuehr(single.text().replace("ï¿½", "").replace(",", "").replace(".", ",").trim() );
 								break;
 							case "value-Market valuation":
-								entry.setKurswert( single.text().replace("€", "").replace(",", "").replace(".", ",").trim() );
+								entry.setKurswert( single.text().replace("ï¿½", "").replace(",", "").replace(".", ",").trim() );
 								break;
 	///////////////////////////////////////////////////////////							
-							case "value-Ausführungspreis":
-								entry.setAusfuehrungspreis(single.text().replace("€", "").replace(",", "").replace(".", ",").trim() );
+							case "value-Ausfï¿½hrungspreis":
+								entry.setAusfuehrungspreis(single.text().replace("ï¿½", "").replace(",", "").replace(".", ",").trim() );
 								break;
-							case "value-Ausgeführte Stückzahl":
-								entry.setAusfuehrungsstueckzahl(single.text().replace("€", "").replace(",", "").replace(".", ",").trim() );
+							case "value-Ausgefï¿½hrte Stï¿½ckzahl":
+								entry.setAusfuehrungsstueckzahl(single.text().replace("ï¿½", "").replace(",", "").replace(".", ",").trim() );
 								break;
 							case "value-Limitpreis":
-								entry.setLimitpreis( single.text().replace("€", "").replace(",", "").replace(".", ",").trim() );
+								entry.setLimitpreis( single.text().replace("ï¿½", "").replace(",", "").replace(".", ",").trim() );
 								break;
 							case "value-Handelsplatz":
 								entry.setHandelsplatz(single.text());
@@ -498,11 +498,11 @@ public class Window {
 							case "value-Referenz der Transaktion":
 								entry.setReferenz(single.text());
 								break;
-							case "value-Ordergebühr":
-								entry.setOrdergebuehr(single.text().replace("€", "").replace(",", "").replace(".", ",").trim() );
+							case "value-Ordergebï¿½hr":
+								entry.setOrdergebuehr(single.text().replace("ï¿½", "").replace(",", "").replace(".", ",").trim() );
 								break;
 							case "value-Kurswert":
-								entry.setKurswert( single.text().replace("€", "").replace(",", "").replace(".", ",").trim() );
+								entry.setKurswert( single.text().replace("ï¿½", "").replace(",", "").replace(".", ",").trim() );
 								break;
 						}
 					}
@@ -558,7 +558,7 @@ public class Window {
 		shlScalablecapitalparserV = new Shell(display, SWT.CLOSE | SWT.TITLE | SWT.MIN );
 		shlScalablecapitalparserV.setBackground(SWTResourceManager.getColor(0, 0, 0));
 		shlScalablecapitalparserV.setSize(1028, 970);
-		shlScalablecapitalparserV.setText("scalable.capital.parser v0.3");
+		shlScalablecapitalparserV.setText("neo.broker.parser v0.3");
 		
 		browser = new Browser(shlScalablecapitalparserV, SWT.NONE);
 		browser.setBounds(10, 10, 990, 698);

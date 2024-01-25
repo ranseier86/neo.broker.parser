@@ -1,1 +1,1 @@
-start javaw.exe -Dorg.eclipse.swt.browser.DefaultType=edge -jar scalable.capital.parser.jar
+start javaw.exe -Dorg.eclipse.swt.browser.DefaultType=edge -jar neo.broker.parser.jar
