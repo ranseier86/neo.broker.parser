@@ -1,6 +1,4 @@
 # neo.broker.parser
-i added support for Trade Republic besides Scalable Capital and now the naming is not good anymore. so i will call this tool neo.broker.parser for now
-
 this tool saved you some work? consider support via https://www.paypal.com/donate/?hosted_button_id=L9526F6FVGKJ2
 
 my source is crap but it works.
@@ -11,6 +9,10 @@ select english as language in your scalable profile. other languages will cause 
 
 run in command line with vm arguments or use batch file in /bin
 
+# broker
+* Scalable Capital
+* Trade Republic
+  
 ```
 start javaw.exe -Dorg.eclipse.swt.browser.DefaultType=edge -jar scalable.capital.parser.jar
 ```
@@ -50,8 +52,11 @@ start javaw.exe -Dorg.eclipse.swt.browser.DefaultType=edge -jar scalable.capital
 
 # tags
 
+## general
+scalable capital trade republic scalablecapital traderepublic neo broker neobroker parser 
+
 ## english
-scalable capital parser export exporter transaction transactions
+export exporter transaction transactions
 
 ## german
-scalable capital parser export exportieren transaktion transaktionen
+exportieren transaktion transaktionen
