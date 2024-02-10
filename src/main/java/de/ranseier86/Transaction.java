@@ -208,7 +208,7 @@ public class Transaction {
 	}
 
 	public void setListeDatum(String broker, String listeDatum) {
-		if (broker.equals("scaleable")) {
+		if (broker.equals("scalable")) {
 			this.listeDatum = listeDatum;
 			this.listeJahr = listeDatum.substring(0,4);
 			this.listeMonat = listeDatum.substring(5,7);			
